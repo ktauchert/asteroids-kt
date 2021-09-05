@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  background-color: black;
+}
+
+.game-over-container {
+  width: 400px;
+  height: auto;
+  background: white;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  border-radius: 10px;
+  display: block;
+}
+.game-over-container.hidden {
+  display: none;
+}
+.points {
+  text-align: center;
+}
+
+.start-game-btn {
+  margin: 10px auto;
+  width: 380px;
+  height: auto;
+  font-weight: 500;
+  font-size: 2rem;
+  background-color: rgb(35, 235, 35);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 2px 2px 4px grey;
+}
+.start-game-btn:hover {
+  background-color: orange;
+  box-shadow: none;
+}
