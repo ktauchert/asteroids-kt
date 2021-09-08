@@ -5,6 +5,7 @@ import Projectile from "./lib/Projectile";
 import Enemy from "./lib/Enemy";
 import gsap from "gsap";
 import Particle from "./lib/Particle";
+import axios from "axios";
 
 const PLAYER_RADIUS = 20;
 const PLAYER_COLOR = 'rgb(220, 220, 220)';
@@ -15,10 +16,14 @@ const canvas = document.querySelector("canvas");
 const chosenLevelEl = document.getElementById('chosen-level');
 
 
-const gameOverEl = document.getElementById('game-over-container');
+// const gameOverEl = document.getElementById('game-over-container');
 const userScoreEl = document.getElementById('user-score');
 const startGameBtn = document.getElementById('start-game-btn');
 const levelBtns = document.querySelectorAll('.level-btn');
+const submitScoreBtn = $('#submit-score-btn');
+const getScoresBtn = $('#get-score-btn');
+const $gameMenuModal = $('#gameMenuModal');
+const $level = $('#level');
 
 let userScore = 0;
 let keys = [];
@@ -158,11 +163,11 @@ function animate() {
             enemies.splice(eIndex, 1);
         }
         if (eIndex + 1 != enemy.length) {
-            console.log("enemy left");
+            // console.log("enemy left");
             for (let i = eIndex + 1; i < enemies.length; i++) {
                 // Enemybounce
                 if (enemiesBounce && collides(enemy, enemies[i])) {
-                    console.log("Enemy collides")
+                    // console.log("Enemy collides")
                     const splitVelocities = calcSplitEnemyVelocity(enemy, enemies[i]);
 
                     enemy.velocity = splitVelocities[0];
@@ -181,7 +186,10 @@ function animate() {
             cancelAnimationFrame(animationHandler);
             clearInterval(spawnInterval);
             spawnInterval = null;
-            gameOverEl.classList.remove('hidden');
+            setTimeout(() => {
+                $gameMenuModal.modal('show');
+            }, 800);
+            // gameOverEl.classList.remove('hidden');
             ctx.fillStyle = 'rgba(222,50,0, 1)'
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             userScoreEl.innerText = userScore;
@@ -233,7 +241,9 @@ function animate() {
         )
     });
 }
-function setDificulty() {
+function setDifficulty() {
+    let level = $level.val();
+    console.log(level)
     switch (level) {
         case "Very Easy":
             pointsHitEnemy = 75;
@@ -269,9 +279,17 @@ function setDificulty() {
             enemySpawnTimeout = 500;
             splitEnemies = true;
             enemiesBounce = true;
+            break;
         default:
+            pointsHitEnemy = 100;
+            pointsDestroyEnemy = 250;
+            enemySpawnTimeout = 1500;
+            splitEnemies = false;
+            enemiesBounce = false;
+            level = "Easy"
             break;
     }
+    chosenLevelEl.innerHTML = level;
 }
 function spawnEnemies() {
     spawnInterval = setInterval(() => {
@@ -313,48 +331,55 @@ function spawnEnemies() {
         );
     }, enemySpawnTimeout);
 }
-// TODO:
-// velocity dependant on diff from center
-// ring appears to show velocity
+const inDev = false;
+const urlLocal = "http://localhost/php-stuff/asteroids.php";
+const urlOnline = "./php/asteroids.php";
 
-// function keysPressed(e) {
-//     // store an entry for every key pressed
-//     e.preventDefault();
-//     keys[e.keyCode] = true;
+function saveHighScore(name = "", score = 0, game = "asteroids") {
+    if (score === 0) return false;
+    if (name === "") return false;
+    let difficulty = $level.val();;
 
-//     console.log(e.keyCode)
-
-//     // left
-//     if (keys[37]) {
-//         player.velocity.x -= 1;
-//         player.update();
-//     }
-
-//     // right
-//     if (keys[39]) {
-//         player.velocity.x += 1;
-//         player.update();
-//     }
-
-//     // down
-//     if (keys[38]) {
-//         player.velocity.y -= 1;
-//         player.update();
-//     }
-
-//     // up
-//     if (keys[40]) {
-//         player.velocity.y += 1;
-//         player.update();
-//     }
-
-//     // full STOP
-//     if (keys[32]) {
-//         player.velocity = { x: 0, y: 0 }
-//         player.update();
-//     }
-//     player.update();
-// }
+    axios({
+        method: "post",
+        url: inDev ? urlLocal : urlOnline,
+        headers: { 'Content-Type': 'text' },
+        data: {
+            task: "setHighscore",
+            name,
+            score,
+            game,
+            difficulty
+        }
+    })
+        .then(res => {
+            // console.log(res);
+            getHighscores('asteroids');
+        })
+}
+function getHighscores(game = "asteroids") {
+    //return true;
+    axios({
+        method: 'post',
+        // url: "./php/saveHighScore.php",
+        url: inDev ? urlLocal : urlOnline,
+        headers: { 'Content-Type': 'text' },
+        data: {
+            task: "getHighscore",
+            game
+        }
+    })
+        .then(({ data }) => {
+            let highscoreTable = "";
+            console.log(data)
+            data["values"].forEach(
+                highscore => {
+                    highscoreTable += `<tr><td scope="row">${highscore.username}</td><td>${highscore.score}</td><td>${highscore.difficulty}</td><td>${highscore.created_at}</td></tr>`
+                }
+            )
+            $('#highcores-table-body').html(highscoreTable);
+        })
+}
 // Eventlistener
 canvas.addEventListener("click", (e) => {
     const center = {
@@ -377,20 +402,27 @@ canvas.addEventListener("click", (e) => {
     projectiles.push(new Projectile(ctx, center.x, center.y, 5, PROJECTILE_COLOR, velocity));
 });
 
-levelBtns.forEach(
-    btn => {
-        btn.addEventListener('click', (e) => {
-            console.log(e.target.innerText);
-            level = e.target.innerText;
-            chosenLevelEl.innerText = e.target.innerText;
-            setDificulty();
-        })
-    }
-)
 startGameBtn.addEventListener('click', () => {
     init();
     animate();
     spawnEnemies();
-    gameOverEl.classList.add('hidden');
+    $gameMenuModal.modal('hide')
+    // gameOverEl.classList.add('hidden');
 })
+submitScoreBtn.on('click', (e) => {
+    e.preventDefault();
+    // console.log("Saved")
+    let name = $('#name').val();
+    saveHighScore(name, userScore);
+})
+getScoresBtn.on('click', () => {
+    getHighscores('asteroids');
+})
+$('#openGameModalBtn').on('click', () => {
+    getHighscores('asteroids');
+})
+$level.on('change', setDifficulty)
 // window.addEventListener("keyup", keysPressed, false);
+$('#close-modal-btn').on('click', () => {
+    $gameMenuModal.modal('hide');
+})

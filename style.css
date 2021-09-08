@@ -4,13 +4,13 @@ body {
 }
 
 .game-over-container {
-  width: 400px;
+  min-width: 200px;
   height: auto;
   background: white;
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 80px;
+  left: 5%;
+  /* transform: translate(-50%); */
   display: flex;
   justify-content: center;
   border-radius: 10px;
@@ -25,7 +25,7 @@ body {
 
 .start-game-btn {
   margin: 10px auto;
-  width: 380px;
+  width: 80%;
   height: auto;
   font-weight: 500;
   font-size: 2rem;
@@ -37,4 +37,19 @@ body {
 .start-game-btn:hover {
   background-color: orange;
   box-shadow: none;
+}
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+.score-container {
+  position: fixed;
+  top: 70px;
+  left: 10px;
+  color: white;
 }
